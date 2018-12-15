@@ -1,0 +1,86 @@
+/*
+ * What's this file?
+ * It's a dictionary of quest abbreviations we like to use. It maps abbreviations to quest descriptions.
+ *
+ * Why do one abbreviation map to multiple 'actions' and 'rewards'?
+ * All the action or reward strings under one abbreviation is supposed to mean one unique actions. The multiple strings
+ * are to support different descriptions of the same thing. For example, some say "Throw 3 Great Ball in A Row" while
+ * some says "Make 3 Great Throws in a row". And some mapping website in Japan will call it something in Japanese. These
+ * arrays are suppose to hold all possible action/reward descriptions.
+ *
+ * Does order matter for the 'actions' or 'rewards' arrays?
+ * Yes - the first string in each of these arrays is used to generate the outputs that users see. Subsequent array
+ * elements are assumed to be other known representations of the same thing that are used when reading maps from
+ * different sources.
+ * Example:
+ * "3G15": {
+ *     "actions": ["Make 3 Great Curveball Throws in a row", "Throw 3 Great Curveballs in A Row"],
+ *     "rewards": ["1500 Stardust"]
+ * },
+ * Output will use "Make 3 Great Curveball Throws in a row" to describe "3G15". But when a quest extractor comes across
+ * "Throw 3 Great Curveballs in A Row", it will know that means the same thing as "Make 3 Great Curveball Throws in a
+ * row".
+ *
+ * Some assumption about quest/action/reward descriptions:
+ *  - Abbreviation uniquely identify an action-reward pair, i.e. '3G10' refers to one action and reward only
+ *  - Action description strings are unique, i.g. 'Win 3 Gym Battles' cannot mean different action in different language
+ *  - Reward description strings are unique, i.g. '1000 Stardust' cannot mean different things in different language
+ *
+ * TODO: Move multiple description language support business out of the abbreviation dictionary. Technically, we may
+ * want to define these translations without having to define an abbreviation for the quest. Translation functionality
+ * may find a better home somewhere under pogo.assistance.data.extraction.
+ */
+{
+  "3G15": {
+    "actions": ["Make 3 Great Curveball Throws in a row"],
+    "rewards": ["1500 Stardust"]
+  },
+  "DT15": {
+    "actions": ["Catch 1 Pokémon (Ditto)"],
+    "rewards": ["1500 Stardust"]
+  },
+  "DR15": {
+    "actions": ["Catch 1 Pokémon (Type: Dragon)"],
+    "rewards": ["1500 Stardust"]
+  },
+  "3R15": {
+    "actions": ["Win 3 raids"],
+    "rewards": ["1500 Stardust"]
+  },
+  "3B10": {
+    "actions": ["Win 3 gym Battles"],
+    "rewards": ["1000 Stardust"]
+  },
+  "3G10": {
+    "actions": ["Make 3 Great Throws in a row"],
+    "rewards": ["1000 Stardust"]
+  },
+  "7S10": {
+    "actions": ["Use a Super-Effective Charge Attack 7 times"],
+    "rewards": ["1000 Stardust"]
+  },
+  "3E10": {
+    "actions": ["Hatch 3 Eggs"],
+    "rewards": ["1000 Stardust"]
+  },
+  "RL10": {
+    "actions": ["Win 1 level 3 Raid or higher"],
+    "rewards": ["1000 Stardust"]
+  },
+  "DTC": {
+    "actions": ["Catch 1 Pokémon (Ditto)"],
+    "rewards": ["3 Rare Candies"]
+  },
+  "3GC": {
+    "actions": ["Make 3 Great Curveball Throws in a row"],
+    "rewards": ["3 Rare Candies"]
+  },
+  "DRC": {
+    "actions": ["Catch 1 Pokémon (Type: Dragon)"],
+    "rewards": ["3 Rare Candies"]
+  },
+  "DRT": {
+    "actions": ["Catch 1 Pokémon (Type: Dragon)"],
+    "rewards": ["Pokémon Encounter: Dratini"]
+  }
+}

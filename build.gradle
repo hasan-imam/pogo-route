@@ -1,0 +1,58 @@
+plugins {
+    // https://docs.gradle.org/current/userguide/application_plugin.html
+    id 'application' // https://github.com/DV8FromTheWorld/JDA/wiki/2%29-IntelliJ-IDEA-Setup
+
+    id 'com.github.johnrengelman.shadow' version '2.0.1' // for bundling jar with all dependencies
+    id 'java'
+    id 'net.ltgt.apt' version '0.10'
+}
+
+group 'pogo.assistance.route'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+mainClassName = "pogo.assistance.ui.console.Hamilton"
+
+repositories {
+    jcenter() // For DV8FromTheWorld/JDA
+    mavenCentral()
+}
+
+dependencies {
+    // https://logging.apache.org/log4j/2.x/log4j-slf4j-impl/dependency-info.html
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+
+    // https://projectlombok.org/setup/gradle
+    compileOnly 'org.projectlombok:lombok:1.18.4'
+    apt 'org.projectlombok:lombok:1.18.4'
+
+    // https://github.com/google/guava/wiki/UseGuavaInYourBuild
+    compile group: 'com.google.guava', name: 'guava', version: '23.5-jre'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+    testCompile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.2", "org.junit.jupiter:junit-jupiter-params:5.3.2")
+
+    // immutable entities generation
+    apt "org.immutables:value:2.7.3"
+    compile 'org.immutables:value:2.7.3' // for annotations
+    compile 'org.immutables:builder:2.7.3' // for annotations
+
+    // https://github.com/DV8FromTheWorld/JDA
+    compile ('net.dv8tion:JDA:3.8.1_448') {
+        exclude module: 'opus-java'
+    }
+
+    // https://mvnrepository.com/artifact/com.google.http-client/google-http-client-jackson2
+    compile group: 'com.google.http-client', name: 'google-http-client-jackson2', version: '1.17.0-rc'
+
+    // https://github.com/google/gson
+    implementation 'com.google.code.gson:gson:2.8.5'
+}
+
+compileJava.options.encoding = 'UTF-8'
