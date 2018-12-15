@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction;
+package pogo.assistance.data.extraction.pokemap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -8,13 +8,14 @@ import java.nio.file.Files;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import pogo.assistance.data.model.Quest;
+import pogo.assistance.util.FileIOUtils;
 
-public class NYCQuestProviderTest {
+class PokemapQuestProviderTest {
 
     @Test
     void prepareQueryStringFromMetadata_HappyCase_ReturnsExpected() throws IOException {
-        final String queryString = NYCQuestProvider.prepareQueryStringFromMetadata(new String(
-                Files.readAllBytes(NYCQuestProvider.TEST_RESOURCES_DIR.resolve("metadata-query-output.json")),
+        final String queryString = PokemapQuestProvider.prepareQueryStringFromMetadata(new String(
+                Files.readAllBytes(FileIOUtils.resolvePackageLocalFilePath("metadata-query-output.json", PokemapQuestProviderTest.class)),
                 StandardCharsets.UTF_8));
         assertEquals("quests%5B%5D=2%2C0%2C1&quests%5B%5D=2%2C0%2C2&quests%5B%5D=2%2C0%2C3" +
                 "&quests%5B%5D=2%2C0%2C101&quests%5B%5D=2%2C0%2C102&quests%5B%5D=2%2C0%2C103&quests%5B%5D=2%2C0%2C201" +
@@ -32,8 +33,8 @@ public class NYCQuestProviderTest {
 
     @Test
     void parseQuestsFromQuestData_HappyCase_ReturnsExpected() throws IOException {
-        final List<Quest> quests = NYCQuestProvider.parseQuestsFromQuestData(new String(
-                Files.readAllBytes(NYCQuestProvider.TEST_RESOURCES_DIR.resolve("quest-query-output.json")),
+        final List<Quest> quests = PokemapQuestProvider.parseQuestsFromQuestData(new String(
+                Files.readAllBytes(FileIOUtils.resolvePackageLocalFilePath("quest-query-output.json", PokemapQuestProviderTest.class)),
                 StandardCharsets.UTF_8));
         assertEquals(16557, quests.size());
     }

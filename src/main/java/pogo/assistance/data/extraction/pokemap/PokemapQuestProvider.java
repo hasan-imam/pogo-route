@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction;
+package pogo.assistance.data.extraction.pokemap;
 
 import static pogo.assistance.data.quest.QuestDictionary.fromActionDescriptionToAbbreviation;
 
@@ -30,23 +30,53 @@ import pogo.assistance.data.model.ImmutableQuest;
 import pogo.assistance.data.model.ImmutableReward;
 import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.quest.QuestProvider;
+import pogo.assistance.util.FileIOUtils;
 
-public class NYCQuestProvider implements QuestProvider {
+public class PokemapQuestProvider implements QuestProvider {
 
     static final Path TEST_RESOURCES_DIR =
-            Paths.get("src", "test", "resources", "pogo", "assistance", "data", "extraction", "nycpokemap");
+            Paths.get("pogo", "assistance", "data", "extraction", "pokemap");
+//    static final Path TEST_RESOURCES_DIR =
+//            Paths.get("src", "main", "resources", "pogo", "assistance", "data", "extraction", "pokemap");
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    private static final String BASE_URL = "https://nycpokemap.com/quests.php";
 
-    @Override
+    private final String baseUrl;
+
+    public PokemapQuestProvider(final String map) {
+        switch (map) {
+            case "NYC":
+                baseUrl = "https://nycpokemap.com/quests.php";
+                break;
+            case "SG":
+                baseUrl = "https://sgpokemap.com/quests.php";
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("Unsupported map: %s", map));
+        }
+    }
+
     public List<Quest> getQuests() {
-        return Optional.of(readFromUrl(BASE_URL))
-                .map(NYCQuestProvider::prepareQueryStringFromMetadata)
-                .map(queryString -> BASE_URL + "?" + queryString)
-                .map(NYCQuestProvider::readFromUrl)
-                .map(NYCQuestProvider::parseQuestsFromQuestData)
+        return Optional.of(readFromUrl(baseUrl))
+                .map(PokemapQuestProvider::prepareQueryStringFromMetadata)
+                .map(queryString -> baseUrl + "?" + queryString)
+                .map(this::readFromUrl)
+                .map(PokemapQuestProvider::parseQuestsFromQuestData)
                 .orElseGet(Collections::emptyList);
+    }
+
+    private String readFromUrl(final String urlString) {
+        final HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory();
+        try {
+            final HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(urlString));
+            final HttpHeaders headers = request.getHeaders();
+            headers.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36");
+            headers.set("Time-Zone", "Europe/Amsterdam");
+            headers.set("referer", baseUrl);
+            return request.execute().parseAsString();
+        } catch (final IOException e) {
+            throw new RuntimeException(String.format("Failed to get JSON from URL %s", urlString), e);
+        }
     }
 
     @VisibleForTesting
@@ -92,25 +122,10 @@ public class NYCQuestProvider implements QuestProvider {
                 }).collect(Collectors.toList());
     }
 
-    @VisibleForTesting
-    static String readFromUrl(final String urlString) {
-        final HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory();
-        try {
-            final HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(urlString));
-            final HttpHeaders headers = request.getHeaders();
-            headers.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36");
-            headers.set("Time-Zone", "Europe/Amsterdam");
-            headers.set("referer", "https://nycpokemap.com/quest.html");
-            return request.execute().parseAsString();
-        } catch (final IOException e) {
-            throw new RuntimeException(String.format("Failed to get JSON from URL %s", urlString), e);
-        }
-    }
-
     public static QuestProvider createFileBasedProvider() {
         try {
-            final byte[] bytes = Files.readAllBytes(TEST_RESOURCES_DIR.resolve("quest-query-output.json"));
-            return () -> NYCQuestProvider.parseQuestsFromQuestData(new String(
+            final byte[] bytes = Files.readAllBytes(FileIOUtils.resolvePackageLocalFilePath("quest-query-output.json", PokemapQuestProvider.class));
+            return () -> PokemapQuestProvider.parseQuestsFromQuestData(new String(
                     bytes,
                     StandardCharsets.UTF_8));
         } catch (final IOException e) {

@@ -5,8 +5,6 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,12 +13,10 @@ import pogo.assistance.data.model.ImmutableAction;
 import pogo.assistance.data.model.ImmutableReward;
 import pogo.assistance.data.model.ImmutableTask;
 import pogo.assistance.data.model.Task;
+import pogo.assistance.util.FileIOUtils;
 
-// TODO: refactor to have 1:1 mapping between task and abbr
 public class QuestDictionary {
 
-    private static final Path DICT_PATH =
-            Paths.get("src", "main", "resources", "pogo", "assistance", "data", "quest", "quest-dictionary.txt");
     private static final String MAPPING_DESC_FORMAT = "%s - %s";
     private static Map<String, String> DESC_TO_ABBR;
     private static Map<String, Task> ABBR_TO_TASK;
@@ -69,9 +65,12 @@ public class QuestDictionary {
     private static JsonObject getDictionaryJson() {
         try {
             final GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.setLenient();
-            return gsonBuilder.create()
-                    .fromJson(new String(Files.readAllBytes(DICT_PATH), StandardCharsets.UTF_8), JsonObject.class);
+            gsonBuilder.setLenient(); // because this json file contains comments
+            return gsonBuilder.create().fromJson(
+                    new String(Files.readAllBytes(
+                            FileIOUtils.resolvePackageLocalFilePath("quest-dictionary.txt", QuestDictionary.class)),
+                            StandardCharsets.UTF_8),
+                    JsonObject.class);
         } catch (final IOException e) {
             throw new RuntimeException("Failed to read quest dictionary: quest-dictionary.json", e);
         }
