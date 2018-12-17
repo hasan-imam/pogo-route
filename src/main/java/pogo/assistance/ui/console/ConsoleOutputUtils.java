@@ -18,7 +18,7 @@ import pogo.assistance.route.planning.conditional.bundle.Bundle;
 import pogo.assistance.ui.TourDescriber;
 
 @UtilityClass
-class ConsoleOutputUtils {
+public class ConsoleOutputUtils {
 
     public static void printAvailableQuestDetails(final List<Quest> quests) {
         final Map<Action, List<Quest>> groupedByAction = new HashMap<>();

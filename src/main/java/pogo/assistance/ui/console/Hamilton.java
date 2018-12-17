@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import pogo.assistance.data.extraction.ninedb.NineDBQuestProvider;
 import pogo.assistance.data.extraction.pokemap.PokemapQuestProvider;
 import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.data.model.Quest;
@@ -30,6 +31,7 @@ public class Hamilton {
         final Map<String, QuestProvider> questProviderByLocation = new HashMap<>();
         questProviderByLocation.put("NYC", new PokemapQuestProvider("NYC"));
         questProviderByLocation.put("SG", new PokemapQuestProvider("SG"));
+        questProviderByLocation.put("JP", new NineDBQuestProvider());
 
         QUEST_PROVIDER_MAP = questProviderByLocation;
     }
@@ -40,8 +42,10 @@ public class Hamilton {
                 " Trial run gets the quest details from a dummy file" +
                 " instead of querying real websites every time you run application.");
         if (isTrial) {
-            QUEST_PROVIDER_MAP.put("NYC", PokemapQuestProvider.createFileBasedProvider());
-            QUEST_PROVIDER_MAP.put("SG", PokemapQuestProvider.createFileBasedProvider());
+            final QuestProvider staticFileBasedProvider = PokemapQuestProvider.createFileBasedProvider();
+            QUEST_PROVIDER_MAP.put("NYC", staticFileBasedProvider);
+            QUEST_PROVIDER_MAP.put("SG", staticFileBasedProvider);
+            QUEST_PROVIDER_MAP.put("JP", staticFileBasedProvider);
         }
         // Temporary code
 
