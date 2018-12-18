@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -93,7 +94,7 @@ public class NineDBQuestProvider implements QuestProvider {
         return PREFECTURE_TO_URL.keySet().stream()
                 .map(NineDBQuestProvider::fetchAndProcessPrefecture)
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
 
     private static List<Quest> fetchAndProcessPrefecture(final String prefecture) {

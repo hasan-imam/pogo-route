@@ -1,7 +1,6 @@
 package pogo.assistance.route.planning.conditional.bundle;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,7 +35,7 @@ public class NOfAKindBundleValidator<U extends GeoPoint, V> implements BundleVal
         if (chosenPossibility == null) {
             return possibilities.contains(elementToBundleElementConverter.apply(toBeAdded));
         } else {
-            return chosenPossibility == elementToBundleElementConverter.apply(toBeAdded);
+            return chosenPossibility.equals(elementToBundleElementConverter.apply(toBeAdded));
         }
     }
 

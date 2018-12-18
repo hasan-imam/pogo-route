@@ -2,15 +2,19 @@ package pogo.assistance.ui.console;
 
 import static pogo.assistance.ui.console.BundleDefinitionPrompt.promptAndDefineBundles;
 import static pogo.assistance.ui.console.ConsoleInputUtils.promptAndSelectOne;
+import static pogo.assistance.ui.console.ConsoleInputUtils.promptBoolean;
 import static pogo.assistance.ui.console.ConsoleOutputUtils.printAvailableQuestDetails;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import pogo.assistance.data.extraction.ninedb.NineDBQuestProvider;
+import pogo.assistance.data.extraction.persistence.QuestRWUtils;
 import pogo.assistance.data.extraction.pokemap.PokemapQuestProvider;
 import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.data.model.Quest;
@@ -39,7 +43,8 @@ public class Hamilton {
     public static void main(final String[] args) {
         // Temporary code - useful while people gets used to the app. TODO: remove once everyone is okay with the UI.
         final boolean isTrial = ConsoleInputUtils.promptBoolean("Do you want to do a trial run? [y/n]" +
-                " Trial run gets the quest details from a dummy file" +
+                System.lineSeparator() +
+                "Trial run gets the quest details from a dummy file" +
                 " instead of querying real websites every time you run application.");
         if (isTrial) {
             final QuestProvider staticFileBasedProvider = PokemapQuestProvider.createFileBasedProvider();
@@ -49,31 +54,33 @@ public class Hamilton {
         }
         // Temporary code
 
-        // TODO: Let user supply quests from an existing file.
-        final String selected = promptAndSelectOne(
-                "Select a map:",
-                new ArrayList<>(QUEST_PROVIDER_MAP.keySet()),
-                String::toString);
-        final List<Quest> allAvailableQuests = getQuests(QUEST_PROVIDER_MAP.get(selected));
-        verifyNonEmptyPoints(allAvailableQuests);
-        printAvailableQuestDetails(allAvailableQuests);
-        handleBundledPlanning(allAvailableQuests);
-    }
+        boolean isDoneWithApplication = false;
+        do {
+            final List<Quest> allAvailableQuests = promptAndPreparePoints();
+            if (!allAvailableQuests.isEmpty()) {
+                printAvailableQuestDetails(allAvailableQuests);
+                boolean isDoneWithMap = false;
+                do {
+                    handleBundledPlanning(allAvailableQuests);
+                    if (!promptBoolean("Would you like to do another planning with the same map? [y/n]")) {
+                        isDoneWithMap = true;
+                    }
+                } while (!isDoneWithMap);
+            }
 
-    private static List<Quest> getQuests(final QuestProvider questProvider) {
-        // TODO: need to add some form of 'caching' so we don't query websites every time this runs. May want to store
-        // quest data in some local file and re-use it. Such mechanism may also be added to the providers themselves (?)
-        // Need to think more about this.
-        final List<Quest> quests = questProvider.getQuests();
-        System.out.println(String.format("Got %d quests from map. Printing further details...", quests.size()));
-        return quests;
+            if (!promptBoolean("Would you like to try a different map? [y/n]")) {
+                isDoneWithApplication = true;
+                System.out.println("Great! Exiting application...");
+            }
+        } while (!isDoneWithApplication);
     }
 
     private static void handleBundledPlanning(final List<Quest> allAvailableQuests) {
-        final List<BundlePattern<GeoPoint, String>> bundlePatterns = promptAndDefineBundles(allAvailableQuests);
+        final List<? extends GeoPoint> points = new ArrayList<>(allAvailableQuests);
+        final List<BundlePattern<GeoPoint, String>> bundlePatterns = promptAndDefineBundles(points);
         final BundledTourPlanner planner = new BundledTourPlanner(
                 CooldownCalculator::getDistance,
-                allAvailableQuests,
+                points,
                 -1, // TODO: Let user select a max cooldown time
                 bundlePatterns);
         System.out.println("Planning tour...");
@@ -101,11 +108,24 @@ public class Hamilton {
         return quests;
     }
 
-    private static <T extends GeoPoint> List<T> verifyNonEmptyPoints(final List<T> points) {
-        if (points.isEmpty()) {
-            System.out.println("No points to use for planning. Exiting application...");
-            System.exit(0);
+    private static List<Quest> promptAndPreparePoints() {
+        final String selectedMap = promptAndSelectOne(
+                "Select a map:",
+                new ArrayList<>(QUEST_PROVIDER_MAP.keySet()),
+                String::toString);
+        final Optional<Date> latestFileTime = QuestRWUtils.getLatestDataFetchTime(selectedMap);
+        if (latestFileTime.isPresent()) {
+            final boolean doResuse = promptBoolean(String.format(
+                    "Found previously fetched quest data from date: %s. Reuse? [y/n]", latestFileTime.get()));
+            if (doResuse) {
+                System.out.println(String.format("Reusing pre-fetched data for %s...", selectedMap));
+                return QuestRWUtils.getLatestQuests(selectedMap);
+            }
         }
-        return points;
+
+        System.out.println(String.format("Fetching data for %s...", selectedMap));
+        final List<Quest> quests = QUEST_PROVIDER_MAP.get(selectedMap).getQuests();
+        QuestRWUtils.writeQuests(quests, selectedMap);
+        return quests;
     }
 }

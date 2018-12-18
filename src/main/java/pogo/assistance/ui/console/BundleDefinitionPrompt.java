@@ -24,7 +24,6 @@ class BundleDefinitionPrompt {
 
     /**
      * @param points
-     *      TODO: Implement refining points so only relevant ones remain.
      *      TODO: Implement validation of input pattern elements so that user is warned if mentioned element is absent
      *      among the available points.
      */

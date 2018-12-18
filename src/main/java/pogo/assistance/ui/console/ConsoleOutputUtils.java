@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
-import pogo.assistance.data.model.GeoPoint;
-import pogo.assistance.data.model.Task;
 import pogo.assistance.data.model.Action;
+import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.data.model.Quest;
-import pogo.assistance.data.quest.QuestDictionary;
 import pogo.assistance.data.model.Reward;
+import pogo.assistance.data.model.Task;
+import pogo.assistance.data.quest.QuestDictionary;
 import pogo.assistance.route.planning.conditional.bundle.Bundle;
 import pogo.assistance.ui.TourDescriber;
 
@@ -39,6 +39,7 @@ public class ConsoleOutputUtils {
         availableRewards.sort(Comparator.comparing(Reward::getDescription));
 
         final StringBuilder availableQuestSummary = new StringBuilder();
+        availableQuestSummary.append(String.format("Total %d quests%n.", quests.size()));
 
         availableQuestSummary.append(String.format("%nAvailable quests by abbreviation:%n"));
         groupedByAbbreviation.keySet().stream().sorted().forEach(abbr -> {
@@ -90,9 +91,7 @@ public class ConsoleOutputUtils {
             switch (selected) {
                 case "Give the general output":
                     System.out.println(tourDescriber.getGenericSummary());
-                    System.out.println();
                     System.out.println(tourDescriber.getGenericDescription());
-                    System.out.println();
                     break;
                 case "Print markdown formatted so I can post on Discord":
                     System.out.println(tourDescriber.getDiscordPostWithMarkdown());
@@ -100,11 +99,9 @@ public class ConsoleOutputUtils {
                     break;
                 case "Format so I can bulk enter on mapcustomizer.com":
                     System.out.println(tourDescriber.getFormattedForMapCustomizer());
-                    System.out.println();
                     break;
                 case "Format so I can copy-paste on mapmakerapp.com":
                     System.out.println(tourDescriber.getFormattedForMapMakerapp());
-                    System.out.println();
                     break;
                 case "No thanks, I'm done with the results":
                     isDone = true;

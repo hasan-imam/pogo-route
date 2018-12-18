@@ -119,7 +119,7 @@ public class PokemapQuestProvider implements QuestProvider {
                     fromActionDescriptionToAbbreviation(actionDescription, rewardDescription)
                             .ifPresent(questBuilder::abbreviation);
                     return questBuilder.build();
-                }).collect(Collectors.toList());
+                }).collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
 
     public static QuestProvider createFileBasedProvider() {

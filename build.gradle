@@ -4,7 +4,7 @@ plugins {
 
     id 'com.github.johnrengelman.shadow' version '2.0.1' // for bundling jar with all dependencies
     id 'java'
-    id 'net.ltgt.apt' version '0.10'
+    id 'net.ltgt.apt' version '0.19'
 }
 
 group 'pogo.assistance.route'
@@ -42,6 +42,7 @@ dependencies {
     apt "org.immutables:value:2.7.3"
     compile 'org.immutables:value:2.7.3' // for annotations
     compile 'org.immutables:builder:2.7.3' // for annotations
+    compile 'org.immutables:gson:2.7.3' // for annotations
 
     // https://github.com/DV8FromTheWorld/JDA
     compile ('net.dv8tion:JDA:3.8.1_448') {
