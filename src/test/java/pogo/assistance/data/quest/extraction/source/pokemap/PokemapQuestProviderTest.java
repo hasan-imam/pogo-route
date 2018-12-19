@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction.pokemap;
+package pogo.assistance.data.quest.extraction.source.pokemap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

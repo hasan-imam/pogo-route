@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction.ninedb;
+package pogo.assistance.data.quest.extraction.source.ninedb;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
@@ -22,7 +22,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 import pogo.assistance.data.model.Action;
 import pogo.assistance.data.model.ImmutableAction;
 import pogo.assistance.data.model.ImmutableQuest;
@@ -89,6 +91,13 @@ public class NineDBQuestProvider implements QuestProvider {
             .put("Kyushu : Okinawa", "https://9db.jp/pokemongo/data/4147?pref=%E6%B2%96%E7%B8%84%E7%9C%8C")
             .build();
 
+    @Nonnull
+    @Override
+    public QuestMap getMap() {
+        return QuestMap.JP;
+    }
+
+    @Nonnull
     @Override
     public List<Quest> getQuests() {
         return PREFECTURE_TO_URL.keySet().stream()

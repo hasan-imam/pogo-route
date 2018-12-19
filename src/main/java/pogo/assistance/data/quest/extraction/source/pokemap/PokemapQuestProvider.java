@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction.pokemap;
+package pogo.assistance.data.quest.extraction.source.pokemap;
 
 import static pogo.assistance.data.quest.QuestDictionary.fromActionDescriptionToAbbreviation;
 
@@ -14,38 +14,37 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import lombok.Getter;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
+import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 import pogo.assistance.data.model.ImmutableAction;
 import pogo.assistance.data.model.ImmutableQuest;
 import pogo.assistance.data.model.ImmutableReward;
 import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.quest.QuestProvider;
-import pogo.assistance.util.FileIOUtils;
 
 public class PokemapQuestProvider implements QuestProvider {
 
-    static final Path TEST_RESOURCES_DIR = Paths.get("pogo", "assistance", "data", "extraction", "pokemap");
-
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
+    @Getter
+    private final QuestMap map;
     private final String baseUrl;
 
-    public PokemapQuestProvider(final String map) {
+    public PokemapQuestProvider(final QuestMap map) {
+        this.map = map;
         switch (map) {
-            case "NYC":
+            case NYC:
                 baseUrl = "https://nycpokemap.com/quests.php";
                 break;
-            case "SG":
+            case SG:
                 baseUrl = "https://sgpokemap.com/quests.php";
                 break;
             default:
@@ -117,17 +116,6 @@ public class PokemapQuestProvider implements QuestProvider {
                             .ifPresent(questBuilder::abbreviation);
                     return questBuilder.build();
                 }).collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
-    }
-
-    public static QuestProvider createFileBasedProvider() {
-        try {
-            final byte[] bytes = Files.readAllBytes(FileIOUtils.resolvePackageLocalFilePath("quest-query-output.json", PokemapQuestProvider.class));
-            return () -> PokemapQuestProvider.parseQuestsFromQuestData(new String(
-                    bytes,
-                    StandardCharsets.UTF_8));
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction.persistence;
+package pogo.assistance.data.quest.persistence;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 import pogo.assistance.data.model.Quest;
 
 @Slf4j
@@ -38,9 +39,10 @@ public class QuestRWUtils {
             Pattern.compile(QUEST_FILE_NAME_PREFIX + "(.*?)" + QUEST_FILE_NAME_SUFFIX);
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
-    private static final Gson GSON = buildGson();
+    // TODO: restrict access once everything gets same GSON supplied through DI
+    public static final Gson GSON = buildGson();
 
-    public void writeQuests(@NonNull final List<Quest> quests, @NonNull final String map) {
+    public void writeQuests(@NonNull final List<Quest> quests, @NonNull final QuestMap map) {
         if (quests.isEmpty()) {
             return;
         }
@@ -55,7 +57,7 @@ public class QuestRWUtils {
         }
     }
 
-    public List<Quest> getLatestQuests(final String map) {
+    public List<Quest> getLatestQuests(final QuestMap map) {
         return getLatestQuestFile(map)
                 .map(path -> {
                     try {
@@ -71,11 +73,11 @@ public class QuestRWUtils {
                 .orElse(Collections.emptyList());
     }
 
-    public Optional<Date> getLatestDataFetchTime(final String map) {
+    public Optional<Date> getLatestDataFetchTime(final QuestMap map) {
         return getLatestQuestFile(map).map(QuestRWUtils::getDateFromQuestFileName);
     }
 
-    private void deleteOldFiles(final String map) {
+    private void deleteOldFiles(final QuestMap map) {
         final Path mapDirectory = getMapDirectory(map);
         try {
             Files.walk(mapDirectory)
@@ -96,7 +98,7 @@ public class QuestRWUtils {
         }
     }
 
-    private Optional<Path> getLatestQuestFile(final String map) {
+    private Optional<Path> getLatestQuestFile(final QuestMap map) {
         final Path mapDirectory = getMapDirectory(map);
         try {
             return Files.walk(mapDirectory)
@@ -125,8 +127,8 @@ public class QuestRWUtils {
                 }).orElse(null);
     }
 
-    private static Path getMapDirectory(final String map) {
-        final Path mapDirectory = Paths.get(QUEST_DIR_ROOT, map);
+    private static Path getMapDirectory(final QuestMap map) {
+        final Path mapDirectory = Paths.get(QUEST_DIR_ROOT, map.toString());
         try {
             return Files.createDirectories(mapDirectory);
         } catch (final IOException e) {

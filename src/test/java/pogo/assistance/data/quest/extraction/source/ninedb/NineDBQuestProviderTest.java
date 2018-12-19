@@ -1,4 +1,4 @@
-package pogo.assistance.data.extraction.ninedb;
+package pogo.assistance.data.quest.extraction.source.ninedb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
