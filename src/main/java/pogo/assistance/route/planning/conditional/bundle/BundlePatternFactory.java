@@ -40,7 +40,12 @@ public class BundlePatternFactory {
 
     private static String genericMapper(final GeoPoint geoPoint) {
         if (geoPoint instanceof Quest) {
-            return ((Quest) geoPoint).getAbbreviation().orElseGet(() -> ((Quest) geoPoint).getAction().getDescription());
+            final Quest quest = (Quest) geoPoint;
+            return quest.getAbbreviation()
+                    .orElseGet(() -> String.format(
+                            "%s - %s",
+                            quest.getAction().getDescription(),
+                            quest.getReward().getDescription()));
         } else if (geoPoint instanceof Nest) {
             return ((Nest) geoPoint).getDescription();
         } else {

@@ -34,10 +34,7 @@ import pogo.assistance.util.FileIOUtils;
 
 public class PokemapQuestProvider implements QuestProvider {
 
-    static final Path TEST_RESOURCES_DIR =
-            Paths.get("pogo", "assistance", "data", "extraction", "pokemap");
-//    static final Path TEST_RESOURCES_DIR =
-//            Paths.get("src", "main", "resources", "pogo", "assistance", "data", "extraction", "pokemap");
+    static final Path TEST_RESOURCES_DIR = Paths.get("pogo", "assistance", "data", "extraction", "pokemap");
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 

@@ -3,6 +3,7 @@ package pogo.assistance.ui.console;
 import static pogo.assistance.ui.console.BundleDefinitionPrompt.promptAndDefineBundles;
 import static pogo.assistance.ui.console.ConsoleInputUtils.promptAndSelectOne;
 import static pogo.assistance.ui.console.ConsoleInputUtils.promptBoolean;
+import static pogo.assistance.ui.console.ConsoleInputUtils.readStringToObject;
 import static pogo.assistance.ui.console.ConsoleOutputUtils.printAvailableQuestDetails;
 
 import java.util.ArrayList;
@@ -78,10 +79,16 @@ public class Hamilton {
     private static void handleBundledPlanning(final List<Quest> allAvailableQuests) {
         final List<? extends GeoPoint> points = new ArrayList<>(allAvailableQuests);
         final List<BundlePattern<GeoPoint, String>> bundlePatterns = promptAndDefineBundles(points);
+        final double costLimit;
+        if (promptBoolean("Do you want to define a max tour distance?")) {
+            costLimit = readStringToObject("Enter the max tour distance in kilometers:", Double::parseDouble);
+        } else {
+            costLimit = -1;
+        }
         final BundledTourPlanner planner = new BundledTourPlanner(
                 CooldownCalculator::getDistance,
                 points,
-                -1, // TODO: Let user select a max cooldown time
+                costLimit,
                 bundlePatterns);
         System.out.println("Planning tour...");
         final List<? extends Bundle<? extends GeoPoint>> planned = planner.plan();

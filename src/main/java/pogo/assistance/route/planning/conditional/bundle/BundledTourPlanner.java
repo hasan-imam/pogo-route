@@ -31,12 +31,11 @@ public class BundledTourPlanner {
             final BiFunction<? super GeoPoint, ? super GeoPoint, Double> costFcn,
             final List<? extends GeoPoint> points,
             final double costLimit,
-            List<BundlePattern<GeoPoint, String>> patterns) {
+            final List<BundlePattern<GeoPoint, String>> patterns) {
         this.costFcn = costFcn;
         this.points = points;
         this.costLimit = (costLimit == -1) ? Double.MAX_VALUE : costLimit;
         this.patterns = patterns;
-        Preconditions.checkArgument(points.size() > 1);
     }
 
     public synchronized List<? extends Bundle<? extends GeoPoint>> plan() {
