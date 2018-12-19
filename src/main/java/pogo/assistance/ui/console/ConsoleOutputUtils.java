@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import pogo.assistance.data.model.Action;
 import pogo.assistance.data.model.GeoPoint;
@@ -59,16 +60,30 @@ public class ConsoleOutputUtils {
         });
 
         availableQuestSummary.append(String.format("%nAvailable quests by action:%n"));
-        availableActions.forEach(action -> availableQuestSummary.append(String.format(
-                "%5s x %s%n",
-                groupedByAction.get(action).size(),
-                action.getDescription())));
+        availableActions.stream().sorted(Comparator.comparing(Action::getDescription)).forEach(action -> {
+            groupedByAction.get(action).stream()
+                    .collect(Collectors.groupingBy(Quest::getReward, Collectors.counting()))
+                    .forEach((reward, count) -> {
+                        availableQuestSummary.append(String.format(
+                                "%5s x %s -> %s%n",
+                                count,
+                                action.getDescription(),
+                                reward.getDescription()));
+                    });
+        });
 
         availableQuestSummary.append(String.format("%nAvailable quests by reward:%n"));
-        availableRewards.forEach(reward -> availableQuestSummary.append(String.format(
-                "%5s x %s%n",
-                groupedByReward.get(reward).size(),
-                reward.getDescription())));
+        availableRewards.stream().sorted(Comparator.comparing(Reward::getDescription)).forEach(reward -> {
+            groupedByReward.get(reward).stream()
+                    .collect(Collectors.groupingBy(Quest::getAction, Collectors.counting()))
+                    .forEach((action, count) -> {
+                        availableQuestSummary.append(String.format(
+                                "%5s x %s <- %s%n",
+                                count,
+                                reward.getDescription(),
+                                action.getDescription()));
+                    });
+        });
 
         System.out.println(availableQuestSummary.toString());
     }

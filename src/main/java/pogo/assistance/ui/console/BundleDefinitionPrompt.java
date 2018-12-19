@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +40,10 @@ class BundleDefinitionPrompt {
                 case ANY_OF_A_SET:
                     patterns.add(ConsoleInputUtils.readStringToObject(selected.getPrompt(), input -> {
                         try {
-                            final StringTokenizer tokenizer = new StringTokenizer(input, "xX");
-                            final int bundleSize = Integer.parseInt(tokenizer.nextToken().trim());
+                            final String[] args = input.split("[xX]", 2);
+                            final int bundleSize = Integer.parseInt(args[0].trim());
                             final List<String> patternElements = new ArrayList<>();
-                            new JsonParser().parse(tokenizer.nextToken().trim()).getAsJsonArray().forEach(patternElement -> {
+                            new JsonParser().parse(args[1]).getAsJsonArray().forEach(patternElement -> {
                                 patternElements.add(patternElement.getAsString());
                             });
                             if (patternElements.isEmpty() || bundleSize <= 0) {
