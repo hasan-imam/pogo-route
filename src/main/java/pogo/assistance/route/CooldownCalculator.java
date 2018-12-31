@@ -6,9 +6,6 @@ import static java.lang.Math.sin;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,11 +15,9 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.NonNull;
 import pogo.assistance.data.model.GeoPoint;
-import pogo.assistance.route.planning.conditional.bundle.Bundle;
 
 // TODO: Fix the mix of Duration and Double representation of cooldown time
 public class CooldownCalculator {
@@ -78,8 +73,7 @@ public class CooldownCalculator {
     }
 
     public static <A extends GeoPoint, B extends GeoPoint> double getDistance(final A a, final B b) {
-//        return KM_DISTANCE_CACHE.computeIfAbsent(Arrays.hashCode(new Object[]{a, b}), __ -> getDistance(a, b, DistanceUnit.KM));
-        return getDistance(a, b, DistanceUnit.KM);
+        return KM_DISTANCE_CACHE.computeIfAbsent(Arrays.hashCode(new Object[]{a, b}), __ -> getDistance(a, b, DistanceUnit.KM));
     }
 
     public static <A extends GeoPoint, B extends GeoPoint> double getDistance(
