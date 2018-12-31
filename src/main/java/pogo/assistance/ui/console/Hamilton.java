@@ -18,10 +18,10 @@ import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.quest.QuestProviderFactory;
 import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 import pogo.assistance.data.quest.persistence.QuestRWUtils;
-import pogo.assistance.route.CooldownCalculator;
-import pogo.assistance.route.planning.conditional.bundle.Bundle;
 import pogo.assistance.route.planning.conditional.bundle.BundlePattern;
-import pogo.assistance.route.planning.conditional.bundle.BundledTourPlanner;
+import pogo.assistance.route.planning.conditional.bundle.TourPlanner;
+import pogo.assistance.route.planning.conditional.bundle.ImmutablePlannerConfig;
+import pogo.assistance.route.planning.conditional.bundle.Tour;
 
 @Slf4j
 public class Hamilton {
@@ -57,18 +57,16 @@ public class Hamilton {
         } else {
             costLimit = -1;
         }
-        final BundledTourPlanner planner = new BundledTourPlanner(
-                CooldownCalculator::getDistance,
-                points,
-                costLimit,
-                bundlePatterns);
+        final TourPlanner planner = new TourPlanner(ImmutablePlannerConfig.builder()
+                .maxTourDistance(costLimit)
+                .build());
         System.out.println("Planning tour...");
-        final List<? extends Bundle<? extends GeoPoint>> planned = planner.plan();
-        if (planned.isEmpty()) {
+        final Optional<Tour> planned = planner.plan(points, bundlePatterns);
+        if (!planned.isPresent() || planned.get().getBundles().isEmpty()) {
             System.out.println("Planning produced no feasible tour.");
         } else {
             System.out.println("Planning completed!");
-            ConsoleOutputUtils.promptAndOutputPlan(planned);
+            ConsoleOutputUtils.promptAndOutputPlan(planned.get().getBundles());
         }
     }
 
