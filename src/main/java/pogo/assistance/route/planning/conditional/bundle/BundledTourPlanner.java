@@ -2,7 +2,6 @@ package pogo.assistance.route.planning.conditional.bundle;
 
 import static java.util.Collections.unmodifiableSet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AtomicDouble;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -122,8 +121,7 @@ public class BundledTourPlanner {
             return Optional.empty();
         }
 
-        final BundleBuilder<GeoPoint, String> bundleBuilder =
-                new BundleBuilder<>(validator, (BiFunction<GeoPoint, GeoPoint, Double>) costFcn);
+        final BundleBuilder<GeoPoint, String> bundleBuilder = new BundleBuilder<>(validator);
         final Set<? super GeoPoint> ineligible = new HashSet<>();
 
         Optional<? extends GeoPoint> nextPoint = Optional.of(startingPoint);
@@ -141,6 +139,6 @@ public class BundledTourPlanner {
     }
 
     private double costToAddBundle(@Nullable final GeoPoint fromPoint, final Bundle<? extends GeoPoint> bundle) {
-        return (fromPoint == null ? 0 : costFcn.apply(fromPoint, bundle.getFirst())) + bundle.getCost();
+        return (fromPoint == null ? 0 : costFcn.apply(fromPoint, bundle.getFirst())) + bundle.getDistance();
     }
 }

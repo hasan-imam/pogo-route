@@ -6,14 +6,25 @@ import static java.lang.Math.sin;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import lombok.NonNull;
 import pogo.assistance.data.model.GeoPoint;
+import pogo.assistance.route.planning.conditional.bundle.Bundle;
 
+// TODO: Fix the mix of Duration and Double representation of cooldown time
 public class CooldownCalculator {
 
     private static final NavigableMap<Double, Double> KM_TO_SECOND_CD_TABLE;
@@ -39,9 +50,11 @@ public class CooldownCalculator {
         KM_TO_SECOND_CD_TABLE = Collections.unmodifiableNavigableMap(kmToSecondCd);
     }
 
+    private static final Map<Integer, Double> KM_DISTANCE_CACHE = new HashMap<>(10000);
+
     public static double calculateCost(
-            final List<? extends GeoPoint> geoPoints,
-            final BiFunction<? super GeoPoint, ? super GeoPoint, Double> costFcn) {
+            @NonNull final List<? extends GeoPoint> geoPoints,
+            @NonNull final BiFunction<? super GeoPoint, ? super GeoPoint, Double> costFcn) {
         double cost = 0;
         for (int i = 1; i < geoPoints.size(); i++) {
             cost += costFcn.apply(geoPoints.get(i - 1), geoPoints.get(i));
@@ -65,11 +78,15 @@ public class CooldownCalculator {
     }
 
     public static <A extends GeoPoint, B extends GeoPoint> double getDistance(final A a, final B b) {
+//        return KM_DISTANCE_CACHE.computeIfAbsent(Arrays.hashCode(new Object[]{a, b}), __ -> getDistance(a, b, DistanceUnit.KM));
         return getDistance(a, b, DistanceUnit.KM);
     }
 
-    public static <A extends GeoPoint, B extends GeoPoint> double getDistance(final A a, final B b, final DistanceUnit unit) {
-        if ((a.getLatitude() == b.getLatitude()) && (a.getLongitude() == b.getLongitude())) {
+    public static <A extends GeoPoint, B extends GeoPoint> double getDistance(
+            @Nullable final A a,
+            @Nullable final B b,
+            @NonNull final DistanceUnit unit) {
+        if (a == null || b == null || ((a.getLatitude() == b.getLatitude()) && (a.getLongitude() == b.getLongitude()))) {
             return 0;
         }
         else {

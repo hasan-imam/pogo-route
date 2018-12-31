@@ -3,6 +3,7 @@ package pogo.assistance.ui;
 import static pogo.assistance.route.CooldownCalculator.getCooldown;
 
 import com.google.common.base.Preconditions;
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,9 +14,12 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
+import net.dv8tion.jda.core.MessageBuilder.SplitPolicy;
 import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.data.model.Nest;
 import pogo.assistance.data.model.Quest;
+import pogo.assistance.data.model.Reward;
+import pogo.assistance.data.model.Reward.RewardObject;
 import pogo.assistance.route.CooldownCalculator;
 import pogo.assistance.route.planning.conditional.bundle.Bundle;
 import pogo.assistance.route.planning.conditional.bundle.BundlePatternFactory;
@@ -23,8 +27,14 @@ import pogo.assistance.route.planning.conditional.bundle.BundlePatternFactory;
 @Getter
 public class TourDescriber {
 
+    private static final String ZWSP = "\u200b";
+    private static final int DISCORD_MSG_BUNDLE_COUNT_LIMIT = 10;
+    public static final SplitPolicy DISCORD_MARKDOWN_SPLIT_POLICY = SplitPolicy.onChars(ZWSP, true);
+
     private static final Random RANDOM_GENERATOR = new Random();
     private static final Map<String, String> ID_TO_COLOR_MAP = new HashMap<>();
+
+    private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("#.##");
 
     private final String genericSummary;
     private final String genericDescription;
@@ -43,13 +53,16 @@ public class TourDescriber {
         final List<? super GeoPoint> allPoints = new ArrayList<>();
         final List<Quest> quests = new ArrayList<>();
         final StringBuilder genericDescriptionBuilder = new StringBuilder();
-        final StringBuilder discordPostWithMarkdownBuilder = new StringBuilder();
+        final StringBuilder discordPostWithMarkdownBuilder = new StringBuilder("```");
         final StringBuilder formattedForMapCustomizerBuilder = new StringBuilder();
         final StringBuilder formattedForMapMakerappBuilder = new StringBuilder();
         for (int i = 0; i < bundles.size(); i++) {
             final Bundle<? extends GeoPoint> bundle = bundles.get(i);
             final List<? extends GeoPoint> bundleElements = bundle.getElements();
-            discordPostWithMarkdownBuilder.append("```").append(System.lineSeparator());
+            if (i % DISCORD_MSG_BUNDLE_COUNT_LIMIT == 0 && i >= DISCORD_MSG_BUNDLE_COUNT_LIMIT) {
+                discordPostWithMarkdownBuilder.append("```").append(ZWSP)
+                        .append("```").append(System.lineSeparator());
+            }
             for (int j = 0; j < bundleElements.size(); j++) {
                 final GeoPoint currentPoint = bundleElements.get(j);
                 final GeoPoint nextPoint;
@@ -77,7 +90,7 @@ public class TourDescriber {
                         currentPoint.getLongitude(),
                         description,
                         (nextPoint == null) ? "END" : Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint)),
-                        (j + 1) < bundleElements.size() ? "" : String.format(" (set %d)%n", i + 1));
+                        (j + 1) < bundleElements.size() ? "" : String.format(" (set %d)", i + 1));
                 genericDescriptionBuilder.append(pointDescription);
                 discordPostWithMarkdownBuilder.append(pointDescription);
                 formattedForMapCustomizerBuilder.append(String.format(
@@ -95,8 +108,8 @@ public class TourDescriber {
                         (nextPoint == null) ? "END" : Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint)),
                         getColorCodeFor(currentPoint).map(s -> "," + s).orElse("")));
             } // Described a bundle
-            discordPostWithMarkdownBuilder.append("```").append(System.lineSeparator());
         } // Described all bundles
+        discordPostWithMarkdownBuilder.append("```").append(System.lineSeparator());
 
         this.genericSummary = new StringBuilder()
                 .append(String.format("Total %d quests in %d bundles", quests.size(), bundles.size()))
@@ -120,18 +133,46 @@ public class TourDescriber {
                         "%d x %s",
                         entry.getValue().size(),
                         entry.getKey().getDescription()))
-                .collect(Collectors.joining(", ", "Actions: ", System.lineSeparator()));
+                .collect(Collectors.joining(", ", "Actions: ", ""));
     }
 
     private static String describeRewards(final List<Quest> quests) {
-        return quests.stream().collect(Collectors.groupingBy(Quest::getReward)).entrySet().stream()
-                .map(entry -> String.format("%d x %s", entry.getValue().size(), entry.getKey().getDescription()))
-                .collect(Collectors.joining(", ", "Rewards: ", System.lineSeparator()));
+        final Map<RewardObject, List<Reward>> groupedByType = quests.stream()
+                .map(Quest::getReward)
+                .collect(Collectors.groupingBy(Reward::getRewardObject));
+        final List<String> descriptions = new ArrayList<>();
+        groupedByType.forEach((rewardObject, rewards) -> {
+            if (rewardObject == RewardObject.UNKNOWN) {
+                // Generic description
+                rewards.stream()
+                        .collect(Collectors.groupingBy(Reward::getDescription, Collectors.counting()))
+                        .forEach((desc, count) -> descriptions.add(String.format("%d x %s", count, desc)));
+            } else {
+                rewards.stream().collect(Collectors.partitioningBy(reward -> reward.getQuantity().isPresent()))
+                        .forEach((isQuantifiable, partitionedRewards) -> {
+                            if (isQuantifiable) {
+                                descriptions.add(String.format(
+                                        "%s %s",
+                                        NUMBER_FORMAT.format(partitionedRewards.stream()
+                                                .map(Reward::getQuantity)
+                                                .mapToDouble(Optional::get)
+                                                .sum()),
+                                        rewardObject.getRewardName()));
+                            } else {
+                                // Generic description
+                                partitionedRewards.stream()
+                                        .collect(Collectors.groupingBy(Reward::getDescription, Collectors.counting()))
+                                        .forEach((desc, count) -> descriptions.add(String.format("%d x %s", count, desc)));
+                            }
+                        });
+            }
+        });
+        return (descriptions.isEmpty()) ? "No reward" : "Rewards: " + String.join(", ", descriptions);
     }
 
     private static String describeTotalCooldown(final List<? extends GeoPoint> points) {
         return String.format(
-                "Total time in cool down: %s%n",
+                "Total time in cool down: %s",
                 Duration.ofSeconds((long) CooldownCalculator.calculateCost(points, CooldownCalculator::getCooldown)));
     }
 

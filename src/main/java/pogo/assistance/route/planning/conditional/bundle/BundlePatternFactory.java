@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.function.Function;
 import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.data.model.Nest;
-import pogo.assistance.data.model.Quest;
+import pogo.assistance.data.model.Task;
 
 public class BundlePatternFactory {
 
@@ -38,14 +38,14 @@ public class BundlePatternFactory {
         return BundlePatternFactory::genericMapper;
     }
 
-    private static String genericMapper(final GeoPoint geoPoint) {
-        if (geoPoint instanceof Quest) {
-            final Quest quest = (Quest) geoPoint;
-            return quest.getAbbreviation()
+    public static String genericMapper(final Object geoPoint) {
+        if (geoPoint instanceof Task) {
+            final Task task = (Task) geoPoint;
+            return task.getAbbreviation()
                     .orElseGet(() -> String.format(
                             "%s - %s",
-                            quest.getAction().getDescription(),
-                            quest.getReward().getDescription()));
+                            task.getAction().getDescription(),
+                            task.getReward().getDescription()));
         } else if (geoPoint instanceof Nest) {
             return ((Nest) geoPoint).getDescription();
         } else {
