@@ -21,14 +21,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Getter;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 import pogo.assistance.data.model.ImmutableAction;
 import pogo.assistance.data.model.ImmutableQuest;
 import pogo.assistance.data.model.ImmutableReward;
 import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.quest.QuestProvider;
+import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 
 public class PokemapQuestProvider implements QuestProvider {
 
@@ -71,6 +72,9 @@ public class PokemapQuestProvider implements QuestProvider {
             headers.set("referer", baseUrl);
             return request.execute().parseAsString();
         } catch (final IOException e) {
+            if (e instanceof HttpResponseException && ((HttpResponseException) e).getStatusCode() == 403) {
+                throw new RuntimeException(String.format("Your access to %s has been blocked.", urlString), e);
+            }
             throw new RuntimeException(String.format("Failed to get JSON from URL %s", urlString), e);
         }
     }

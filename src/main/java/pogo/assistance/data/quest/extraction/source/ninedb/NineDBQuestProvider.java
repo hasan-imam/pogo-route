@@ -11,6 +11,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.RateLimiter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -24,7 +25,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 import pogo.assistance.data.model.Action;
 import pogo.assistance.data.model.ImmutableAction;
 import pogo.assistance.data.model.ImmutableQuest;
@@ -33,11 +33,13 @@ import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.model.Reward;
 import pogo.assistance.data.quest.QuestDictionary;
 import pogo.assistance.data.quest.QuestProvider;
+import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 
 @Slf4j
 public class NineDBQuestProvider implements QuestProvider {
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final RateLimiter RATE_LIMITER = RateLimiter.create(1);
 
     private static final Pattern JSON_EXTRACTION_PATTERN = Pattern.compile("var result = (.*?);");
 
@@ -125,6 +127,7 @@ public class NineDBQuestProvider implements QuestProvider {
     }
 
     private static String readFromUrl(final String urlString) {
+        RATE_LIMITER.acquire();
         final HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory();
         try {
             final HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(urlString));
@@ -171,6 +174,8 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Squirtle"; break;
             case 159:
                 reward = "Caterpie"; break;
+            case 209:
+                reward = "Sandshrew"; break;
             case 233:
                 reward = "Clefairy"; break;
             case 234:
@@ -183,22 +188,34 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Golduck"; break;
             case 268:
                 reward = "Mankey"; break;
+            case 275:
+                reward = "Growlithe"; break;
             case 280:
                 reward = "Polywag"; break;
             case 302:
                 reward = "Machop"; break;
+            case 328:
+                reward = "Tentacruel"; break;
+            case 362:
+                reward = "Magnemite"; break;
             case 399:
                 reward = "Gastly"; break;
             case 408:
                 reward = "Onix"; break;
+            case 412:
+                reward = "Drowzee"; break;
             case 420: // ༽つ۞﹏۞༼つ ─=≡ΣO))
                 reward = "Krabby"; break;
             case 429:
                 reward = "Voltorb"; break;
             case 446:
                 reward = "Exeggcute"; break;
+            case 453:
+                reward = "Cubone"; break;
             case 474:
                 reward = "Chansey"; break;
+            case 482:
+                reward = "Starmie"; break;
             case 484:
                 reward = "Scyther"; break;
             case 485:
@@ -211,28 +228,40 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Pinsir"; break;
             case 490:
                 reward = "Magikarp"; break;
+            case 492:
+                reward = "Lapras"; break;
             case 493:
                 reward = "Ditto"; break;
             case 494:
                 reward = "Eevee"; break;
             case 498:
                 reward = "Porygon"; break;
+            case 499:
+                reward = "Omanyte"; break;
+            case 501:
+                reward = "Kabuto"; break;
             case 503:
                 reward = "Aerodactyl"; break;
             case 508:
                 reward = "Dratini"; break;
             case 1334:
                 reward = "Lanturn"; break;
+            case 1354:
+                reward = "Sunkern"; break;
             case 1363:
                 reward = "Misdreavus"; break;
             case 1367:
                 reward = "Pineco"; break;
+            case 1372:
+                reward = "Snubbull"; break;
             case 1378:
                 reward = "Sneasel"; break;
             case 1366:
                 reward = "Girafarig"; break;
             case 1387:
                 reward = "Octillery"; break;
+            case 1391:
+                reward = "Houndour"; break;
             case 1409:
                 reward = "Larvitar"; break;
             case 1996:
@@ -301,6 +330,8 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Nincada"; break;
             case 2523:
                 reward = "Sableye"; break;
+            case 2531:
+                reward = "Manectric"; break;
             case 2536:
                 reward= "Roselia"; break;
             case 2541:
@@ -313,14 +344,23 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Feebas"; break;
             case 4193:
                 reward = "Pokemon (Don't Exist)"; break;
+            case 4370:
+                reward = "Bidoof"; break;
             case 4518:
                 switch(number) {
                     case 3: reward = "3 Silver Pinap Berries"; break;
+                    case 5: reward = "5 Silver Pinap Berries"; break;
                     default: reward = null; break;
                 }
                 break;
             default:
                 reward = null; break;
+        }
+
+        if (reward == null) {
+            System.err.println(String.format(
+                    "Encountered unknown id (%s) and number (%d) could not be mapped to a reward.", id, number));
+            return "unknown reward";
         }
 
         Verify.verify(reward != null, String.format(
