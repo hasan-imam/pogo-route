@@ -53,7 +53,7 @@ public class TourDescriber {
         final List<? super GeoPoint> allPoints = new ArrayList<>();
         final List<Quest> quests = new ArrayList<>();
         final StringBuilder genericDescriptionBuilder = new StringBuilder();
-        final StringBuilder discordPostWithMarkdownBuilder = new StringBuilder("```");
+        final StringBuilder discordPostWithMarkdownBuilder = new StringBuilder("```md" + System.lineSeparator());
         final StringBuilder formattedForMapCustomizerBuilder = new StringBuilder();
         final StringBuilder formattedForMapMakerappBuilder = new StringBuilder();
         for (int i = 0; i < bundles.size(); i++) {
@@ -61,7 +61,7 @@ public class TourDescriber {
             final List<? extends GeoPoint> bundleElements = bundle.getElements();
             if (i % DISCORD_MSG_BUNDLE_COUNT_LIMIT == 0 && i >= DISCORD_MSG_BUNDLE_COUNT_LIMIT) {
                 discordPostWithMarkdownBuilder.append("```").append(ZWSP)
-                        .append("```").append(System.lineSeparator());
+                        .append("```md").append(System.lineSeparator());
             }
             for (int j = 0; j < bundleElements.size(); j++) {
                 final GeoPoint currentPoint = bundleElements.get(j);
@@ -109,10 +109,10 @@ public class TourDescriber {
                         getColorCodeFor(currentPoint).map(s -> "," + s).orElse("")));
             } // Described a bundle
         } // Described all bundles
-        discordPostWithMarkdownBuilder.append("```").append(System.lineSeparator());
+        discordPostWithMarkdownBuilder.append("```").append(ZWSP);
 
         this.genericSummary = new StringBuilder()
-                .append(String.format("Total %d quests in %d bundles", quests.size(), bundles.size()))
+                .append(String.format("Total %d quests in %d sets", quests.size(), bundles.size()))
                 .append(System.lineSeparator())
                 .append(describeTotalCooldown((List<? extends GeoPoint>) allPoints))
                 .append(System.lineSeparator())
@@ -150,7 +150,7 @@ public class TourDescriber {
             } else {
                 rewards.stream().collect(Collectors.partitioningBy(reward -> reward.getQuantity().isPresent()))
                         .forEach((isQuantifiable, partitionedRewards) -> {
-                            if (isQuantifiable) {
+                            if (isQuantifiable && !partitionedRewards.isEmpty()) {
                                 descriptions.add(String.format(
                                         "%s %s",
                                         NUMBER_FORMAT.format(partitionedRewards.stream()
