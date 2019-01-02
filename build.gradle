@@ -12,6 +12,7 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 mainClassName = "pogo.assistance.ui.console.Hamilton"
+//mainClassName = "pogo.assistance.bot.quest.QuestMasterBot"
 
 repositories {
     jcenter() // For DV8FromTheWorld/JDA

@@ -1,0 +1,82 @@
+[
+  {
+    "action": {
+      "description": "Catch 1 Pokémon (Ditto)"
+    },
+    "reward": {
+      "description": "1500 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Make 3 Great Curveball Throws in a row"
+    },
+    "reward": {
+      "description": "1500 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Catch 1 Pokémon (Type: Dragon)"
+    },
+    "reward": {
+      "description": "1500 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Win 3 Raids"
+    },
+    "reward": {
+      "description": "1500 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Make 3 Great Throws in a row"
+    },
+    "reward": {
+      "description": "1000 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Win 3 gym Battles"
+    },
+    "reward": {
+      "description": "1000 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Use a Super-Effective Charge Attack 7 times"
+    },
+    "reward": {
+      "description": "1000 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Make 3 Great Curveball Throws"
+    },
+    "reward": {
+      "description": "1000 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Hatch 3 Eggs"
+    },
+    "reward": {
+      "description": "1000 Stardust"
+    }
+  },
+  {
+    "action": {
+      "description": "Win 1 level 3 Raid or higher"
+    },
+    "reward": {
+      "description": "1000 Stardust"
+    }
+  }
+]
