@@ -1,4 +1,4 @@
-package pogo.assistance.data.quest.extraction.source.ninedb;
+package pogo.assistance.data.extraction.source.ninedb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test;
 import pogo.assistance.data.model.Quest;
 import pogo.assistance.ui.console.ConsoleOutputUtils;
 
-class NineDBQuestProviderTest {
+class NineDBDataExtractorTest {
 
     @Test
     void jsonDataToQuest_HappyCase_ReturnsExpected() {
-        final Quest quest = NineDBQuestProvider.jsonDataToQuest(new JsonParser().parse(
+        final Quest quest = NineDBDataExtractor.jsonDataToQuest(new JsonParser().parse(
                 "{\n" +
                         "\"data_id\": \"2006\",\n" +
                         "\"name\": \"\\u30e2\\u30cb\\u30e5\\u30e1\\u30f3\\u30c8 \\u767d\\u77f3\\u99c5\\u306e\\u6b74\\u53f2\",\n" +
@@ -44,13 +44,13 @@ class NineDBQuestProviderTest {
     void jsonDataToQuest_EmptyJsonData_Throws() {
         assertThrows(
                 NullPointerException.class,
-                () -> NineDBQuestProvider.jsonDataToQuest(new JsonParser().parse("{}").getAsJsonObject()));
+                () -> NineDBDataExtractor.jsonDataToQuest(new JsonParser().parse("{}").getAsJsonObject()));
     }
 
     @Disabled("This test makes real service calls. Enable if you want to test the real fetching mechanism.")
     @Test
     void getQuests_RealRequest_NoVerification() {
-        final List<Quest> quests = new NineDBQuestProvider().getQuests();
+        final List<Quest> quests = new NineDBDataExtractor().getQuests();
         ConsoleOutputUtils.printAvailableQuestDetails(quests);
     }
 

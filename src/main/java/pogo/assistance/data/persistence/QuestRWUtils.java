@@ -1,9 +1,8 @@
-package pogo.assistance.data.quest.persistence;
+package pogo.assistance.data.persistence;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+import dagger.Reusable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,18 +16,17 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
+import pogo.assistance.data.model.Map;
 import pogo.assistance.data.model.Quest;
 
 @Slf4j
-@UtilityClass
+@Reusable
 public class QuestRWUtils {
 
     private static final int MAX_FILE_COUNT_PER_MAP = 3;
@@ -39,10 +37,14 @@ public class QuestRWUtils {
             Pattern.compile(QUEST_FILE_NAME_PREFIX + "(.*?)" + QUEST_FILE_NAME_SUFFIX);
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
-    // TODO: restrict access once everything gets same GSON supplied through DI
-    public static final Gson GSON = buildGson();
+    private final Gson gson;
 
-    public void writeQuests(@NonNull final List<Quest> quests, @NonNull final QuestMap map) {
+    @Inject
+    public QuestRWUtils(@NonNull final Gson gson) {
+        this.gson = gson;
+    }
+
+    public void writeQuests(@NonNull final List<Quest> quests, @NonNull final Map map) {
         if (quests.isEmpty()) {
             return;
         }
@@ -50,14 +52,14 @@ public class QuestRWUtils {
         final Path path = getMapDirectory(map).resolve(
                 QUEST_FILE_NAME_PREFIX + DATE_FORMAT.format(new Date()) + QUEST_FILE_NAME_SUFFIX);
         try {
-            Files.write(path, GSON.toJson(quests, new TypeToken<List<Quest>>(){}.getType()).getBytes());
+            Files.write(path, gson.toJson(quests, new TypeToken<List<Quest>>(){}.getType()).getBytes());
             deleteOldFiles(map);
         } catch (final IOException e) {
             throw new RuntimeException(String.format("Failed to write JSON quest data to file: %s", path), e);
         }
     }
 
-    public List<Quest> getLatestQuests(final QuestMap map) {
+    public List<Quest> getLatestQuests(final Map map) {
         return getLatestQuestFile(map)
                 .map(path -> {
                     try {
@@ -67,17 +69,17 @@ public class QuestRWUtils {
                         return null;
                     }
                 }).map(String::new)
-                .map(jsonString -> GSON.fromJson(jsonString, Quest[].class))
+                .map(jsonString -> gson.fromJson(jsonString, Quest[].class))
                 .map(Arrays::asList)
                 .map(Collections::unmodifiableList)
                 .orElse(Collections.emptyList());
     }
 
-    public Optional<Date> getLatestDataFetchTime(final QuestMap map) {
+    public Optional<Date> getLatestDataFetchTime(final Map map) {
         return getLatestQuestFile(map).map(QuestRWUtils::getDateFromQuestFileName);
     }
 
-    private void deleteOldFiles(final QuestMap map) {
+    private void deleteOldFiles(final Map map) {
         final Path mapDirectory = getMapDirectory(map);
         try {
             Files.walk(mapDirectory)
@@ -98,7 +100,7 @@ public class QuestRWUtils {
         }
     }
 
-    private Optional<Path> getLatestQuestFile(final QuestMap map) {
+    private Optional<Path> getLatestQuestFile(final Map map) {
         final Path mapDirectory = getMapDirectory(map);
         try {
             return Files.walk(mapDirectory)
@@ -127,7 +129,7 @@ public class QuestRWUtils {
                 }).orElse(null);
     }
 
-    private static Path getMapDirectory(final QuestMap map) {
+    private static Path getMapDirectory(final Map map) {
         final Path mapDirectory = Paths.get(QUEST_DIR_ROOT, map.toString());
         try {
             return Files.createDirectories(mapDirectory);
@@ -135,16 +137,6 @@ public class QuestRWUtils {
             throw new RuntimeException(
                     String.format("Failed to create directory (%s) for %s map", mapDirectory, map));
         }
-    }
-
-    private static Gson buildGson() {
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-
-        // Register adapters for GSON ser-de (https://immutables.github.io/json.html#type-adapter-registration)
-        ServiceLoader.load(TypeAdapterFactory.class).forEach(gsonBuilder::registerTypeAdapterFactory);
-
-        gsonBuilder.setPrettyPrinting();
-        return gsonBuilder.create();
     }
 
 }

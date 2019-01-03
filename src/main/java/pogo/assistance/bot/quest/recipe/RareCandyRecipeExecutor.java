@@ -10,12 +10,16 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 import lombok.Getter;
-import pogo.assistance.bot.quest.publishing.DiscordPublisher;
+import lombok.RequiredArgsConstructor;
+import pogo.assistance.bot.quest.publishing.Publisher;
 import pogo.assistance.data.model.GeoPoint;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
+import pogo.assistance.data.quest.QuestProvider;
+import pogo.assistance.data.model.Map;
 import pogo.assistance.route.planning.conditional.bundle.BundlePattern;
 
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class RareCandyRecipeExecutor extends RecipeExecutor {
 
     private static final Set<String> PATTERN_ELEMENTS = ImmutableSet.of("DTC", "3GC", "DRC", "DRT");
@@ -24,11 +28,15 @@ public class RareCandyRecipeExecutor extends RecipeExecutor {
             createOrderIndependentPattern(Arrays.asList("DRC", "DRC", "DRT"), getGenericMapper()));
 
     @Getter
-    private final QuestMap map;
+    private final Map map;
+    @Getter
+    private final QuestProvider questProvider;
+    @Getter
+    private final Publisher publisher;
 
-    public RareCandyRecipeExecutor(final QuestMap map, final DiscordPublisher discordRelay) {
-        super(discordRelay);
-        this.map = map;
+    @Override
+    protected List<? extends GeoPoint> supplyPoints() {
+        return getQuestProvider().getQuests(getMap());
     }
 
     @Override

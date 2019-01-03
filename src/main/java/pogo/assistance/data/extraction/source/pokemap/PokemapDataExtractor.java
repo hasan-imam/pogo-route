@@ -1,4 +1,4 @@
-package pogo.assistance.data.quest.extraction.source.pokemap;
+package pogo.assistance.data.extraction.source.pokemap;
 
 import static pogo.assistance.data.quest.QuestDictionary.fromActionDescriptionToAbbreviation;
 
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import lombok.Getter;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -28,19 +27,15 @@ import pogo.assistance.data.model.ImmutableAction;
 import pogo.assistance.data.model.ImmutableQuest;
 import pogo.assistance.data.model.ImmutableReward;
 import pogo.assistance.data.model.Quest;
-import pogo.assistance.data.quest.QuestProvider;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
+import pogo.assistance.data.model.Map;
 
-public class PokemapQuestProvider implements QuestProvider {
+public class PokemapDataExtractor {
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-    @Getter
-    private final QuestMap map;
     private final String baseUrl;
 
-    public PokemapQuestProvider(final QuestMap map) {
-        this.map = map;
+    public PokemapDataExtractor(final Map map) {
         switch (map) {
             case NYC:
                 baseUrl = "https://nycpokemap.com/quests.php";
@@ -55,10 +50,10 @@ public class PokemapQuestProvider implements QuestProvider {
 
     public List<Quest> getQuests() {
         return Optional.of(readFromUrl(baseUrl))
-                .map(PokemapQuestProvider::prepareQueryStringFromMetadata)
+                .map(PokemapDataExtractor::prepareQueryStringFromMetadata)
                 .map(queryString -> baseUrl + "?" + queryString)
                 .map(this::readFromUrl)
-                .map(PokemapQuestProvider::parseQuestsFromQuestData)
+                .map(PokemapDataExtractor::parseQuestsFromQuestData)
                 .orElseGet(Collections::emptyList);
     }
 

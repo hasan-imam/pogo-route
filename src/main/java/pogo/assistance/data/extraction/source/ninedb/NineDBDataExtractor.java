@@ -1,4 +1,4 @@
-package pogo.assistance.data.quest.extraction.source.ninedb;
+package pogo.assistance.data.extraction.source.ninedb;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
@@ -32,11 +32,9 @@ import pogo.assistance.data.model.ImmutableReward;
 import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.model.Reward;
 import pogo.assistance.data.quest.QuestDictionary;
-import pogo.assistance.data.quest.QuestProvider;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
 
 @Slf4j
-public class NineDBQuestProvider implements QuestProvider {
+public class NineDBDataExtractor {
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final RateLimiter RATE_LIMITER = RateLimiter.create(1);
@@ -94,16 +92,9 @@ public class NineDBQuestProvider implements QuestProvider {
             .build();
 
     @Nonnull
-    @Override
-    public QuestMap getMap() {
-        return QuestMap.JP;
-    }
-
-    @Nonnull
-    @Override
     public List<Quest> getQuests() {
         return PREFECTURE_TO_URL.keySet().stream()
-                .map(NineDBQuestProvider::fetchAndProcessPrefecture)
+                .map(NineDBDataExtractor::fetchAndProcessPrefecture)
                 .flatMap(List::stream)
                 .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }
@@ -244,6 +235,8 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Aerodactyl"; break;
             case 508:
                 reward = "Dratini"; break;
+            case 1312:
+                reward = "Typhlosion"; break;
             case 1334:
                 reward = "Lanturn"; break;
             case 1354:
@@ -340,6 +333,10 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = "Numel"; break;
             case 2548:
                 reward = "Spinda"; break;
+            case 2566:
+                reward = "Lileep"; break;
+            case 2568:
+                reward = "Anorith"; break;
             case 2570:
                 reward = "Feebas"; break;
             case 4193:
@@ -357,11 +354,13 @@ public class NineDBQuestProvider implements QuestProvider {
                 reward = null; break;
         }
 
-        if (reward == null) {
-            System.err.println(String.format(
-                    "Encountered unknown id (%s) and number (%d) could not be mapped to a reward.", id, number));
-            return "unknown reward";
-        }
+//        // Uncomment this block if unknown rewards start showing up in the map. Running the application will result in
+//        // unknown IDs being printed out. Add handling for those new IDs and comment out this again.
+//        if (reward == null) {
+//            System.err.println(String.format(
+//                    "Encountered unknown id (%s) and number (%d) could not be mapped to a reward.", id, number));
+//            return "unknown reward";
+//        }
 
         Verify.verify(reward != null, String.format(
                 "Encountered unknown id (%s) and number (%d) could not be mapped to a reward.", id, number));

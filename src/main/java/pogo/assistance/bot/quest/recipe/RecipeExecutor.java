@@ -2,22 +2,21 @@ package pogo.assistance.bot.quest.recipe;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Streams;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
-import pogo.assistance.bot.quest.publishing.DiscordPublisher;
+import pogo.assistance.bot.quest.publishing.Publisher;
 import pogo.assistance.data.model.GeoPoint;
-import pogo.assistance.data.quest.QuestProviderFactory;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
+import pogo.assistance.data.model.Map;
 import pogo.assistance.route.planning.conditional.bundle.BundlePattern;
 import pogo.assistance.route.planning.conditional.bundle.ImmutablePlannerConfig;
 import pogo.assistance.route.planning.conditional.bundle.PlannerConfig;
@@ -35,8 +34,6 @@ import pogo.assistance.ui.TourDescriber;
 @RequiredArgsConstructor
 public abstract class RecipeExecutor {
 
-    @Getter(value = AccessLevel.PROTECTED)
-    private final DiscordPublisher publisher;
     private final List<String> executionNotes = new ArrayList<>();
 
     public void execute() {
@@ -65,9 +62,7 @@ public abstract class RecipeExecutor {
         publish(tours);
     }
 
-    protected List<? extends GeoPoint> supplyPoints() {
-        return QuestProviderFactory.getPersistanceBackedQuestProvider(getMap()).getQuests();
-    }
+    protected abstract List<? extends GeoPoint> supplyPoints();
 
     protected List<Tour> plan(
             final List<? extends GeoPoint> points,
@@ -93,7 +88,7 @@ public abstract class RecipeExecutor {
             logExecutionNote("Discarded one/more route(s) because they were too short (< 3 sets).");
         }
         if (!mutableList.isEmpty()) {
-            logExecutionNote(String.format("%s points didn't fit into any route.", mutableList.size()));
+            logExecutionNote(String.format("%s point(s) didn't fit into any route.", mutableList.size()));
         }
 
         return tours;
@@ -112,9 +107,16 @@ public abstract class RecipeExecutor {
             messages.add(new MessageBuilder().appendCodeBlock(tourDescriber.getGenericSummary(), "md").build());
             messages.addAll(new MessageBuilder().append(tourDescriber.getDiscordPostWithMarkdown()).buildAll(TourDescriber.DISCORD_MARKDOWN_SPLIT_POLICY));
         });
+
         getExecutionNotes().ifPresent(notes -> messages.add(new MessageBuilder().appendCodeBlock(notes, "fix").build()));
 
-        publisher.postMessage(messages);
+        final List<Message> published = getPublisher().publish(messages);
+        Streams.findLast(published.stream().filter(Objects::nonNull)).ifPresent(lastMessage -> {
+            // Put some emotes on the last message
+            lastMessage.addReaction("\uD83E\uDD16").queue();
+            lastMessage.addReaction("\uD83D\uDC4D").queue();
+            lastMessage.addReaction("\uD83D\uDC4E").complete();
+        });
     }
 
     protected void logExecutionNote(final String note) {
@@ -137,8 +139,9 @@ public abstract class RecipeExecutor {
                 .build();
     }
 
-    protected abstract QuestMap getMap();
+    protected abstract Map getMap();
     protected abstract String getRecipeDescription();
+    protected abstract Publisher getPublisher();
 
     /**
      * @param points

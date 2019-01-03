@@ -9,24 +9,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import lombok.Getter;
-import pogo.assistance.bot.quest.publishing.DiscordPublisher;
+import lombok.RequiredArgsConstructor;
+import pogo.assistance.bot.quest.publishing.Publisher;
+import pogo.assistance.data.di.PersistenceModule;
 import pogo.assistance.data.model.GeoPoint;
+import pogo.assistance.data.model.Map;
 import pogo.assistance.data.model.Task;
-import pogo.assistance.data.quest.QuestProviderFactory.QuestMap;
-import pogo.assistance.data.quest.persistence.QuestRWUtils;
+import pogo.assistance.data.quest.QuestProvider;
 import pogo.assistance.route.planning.conditional.bundle.BundlePattern;
 import pogo.assistance.route.planning.conditional.bundle.BundlePatternFactory;
 import pogo.assistance.util.FileIOUtils;
 
+@RequiredArgsConstructor(onConstructor_ = {@Inject})
 public class StardustRecipeExecutor extends RecipeExecutor {
 
     @Getter
-    private final QuestMap map;
+    private final Map map;
+    @Getter
+    private final QuestProvider questProvider;
+    @Getter
+    private final Publisher publisher;
 
-    public StardustRecipeExecutor(final QuestMap map, final DiscordPublisher discordRelay) {
-        super(discordRelay);
-        this.map = map;
+    @Override
+    protected List<? extends GeoPoint> supplyPoints() {
+        return getQuestProvider().getQuests(getMap());
     }
 
     @Override
@@ -48,7 +56,7 @@ public class StardustRecipeExecutor extends RecipeExecutor {
 
     private static List<Task> getStardustTasks() {
         try {
-            return Arrays.asList(QuestRWUtils.GSON.fromJson(
+            return Arrays.asList(PersistenceModule.provideGson().fromJson(
                     new String(Files.readAllBytes(
                             FileIOUtils.resolvePackageLocalFilePath("stardust-quests.json", StardustRecipeExecutor.class)),
                             StandardCharsets.UTF_8),
