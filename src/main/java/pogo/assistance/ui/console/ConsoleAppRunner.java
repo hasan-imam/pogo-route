@@ -80,7 +80,7 @@ public class ConsoleAppRunner {
             System.out.println("Planning produced no feasible tour.");
         } else {
             System.out.println("Planning completed!");
-            ConsoleOutputUtils.promptAndOutputPlan(planned.get().getBundles());
+            ConsoleOutputUtils.promptAndOutputPlan(planned.get());
         }
     }
 

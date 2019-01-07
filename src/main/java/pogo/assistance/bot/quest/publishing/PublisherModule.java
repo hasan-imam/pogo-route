@@ -2,6 +2,7 @@ package pogo.assistance.bot.quest.publishing;
 
 import dagger.Module;
 import dagger.Provides;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.core.JDA;
@@ -11,12 +12,26 @@ import net.dv8tion.jda.core.entities.TextChannel;
 @Module
 public class PublisherModule {
 
-    private static final String M8M_BOT_TOKEN = "[REDACTED]";
-    private static final long QUEST_OUTPUT_CHANNEL = 123L;
+    public static final String CONSOLE_PUBLISHER = "console-publisher";
+    public static final String DISCORD_PUBLISHER = "discord-publisher";
+
+    private static final String M8M_BOT_TOKEN = "[redacted]";
+
+    private static final long CHANNEL_TEST_LIST_ROUTE_PREVIEW = 123L;
+    private static final long CHANNEL_AUTOMATED_LIST_ROUTE_PREVIEW = 123L;
+    private static final long CHANNEL_LIST_ROUTE_PREVIEW = 123L;
+
+//    @Provides
+//    @Singleton
+////    @Named(CONSOLE_PUBLISHER)
+//    public static Publisher provideConsolePublisher() {
+//        return new ConsolePublisher();
+//    }
 
     @Provides
     @Singleton
-    public static Publisher providePublisher(final TextChannel textChannel) {
+//    @Named(DISCORD_PUBLISHER)
+    public static Publisher provideDiscordPublisher(final TextChannel textChannel) {
         return new DiscordPublisher(textChannel);
     }
 
@@ -37,7 +52,13 @@ public class PublisherModule {
     @Provides
     @Singleton
     public static TextChannel provideTextChannel(final JDA jda) {
-        return jda.getTextChannelById(QUEST_OUTPUT_CHANNEL);
+        final long id = CHANNEL_TEST_LIST_ROUTE_PREVIEW;
+//        final long id = CHANNEL_AUTOMATED_LIST_ROUTE_PREVIEW;
+        final TextChannel textChannel = jda.getTextChannelById(id);
+        if (textChannel == null) {
+            throw new IllegalArgumentException(String.format("Text channel %s non-existent or inaccessible", id));
+        }
+        return textChannel;
     }
 
 }

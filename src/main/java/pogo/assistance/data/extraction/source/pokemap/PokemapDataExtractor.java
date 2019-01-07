@@ -112,7 +112,7 @@ public class PokemapDataExtractor {
                             .action(ImmutableAction.builder().description(actionDescription).build())
                             .reward(ImmutableReward.builder().description(rewardDescription).build());
                     fromActionDescriptionToAbbreviation(actionDescription, rewardDescription)
-                            .ifPresent(questBuilder::abbreviation);
+                            .ifPresent(abbreviation -> questBuilder.abbreviation(Optional.of(abbreviation)));
                     return questBuilder.build();
                 }).collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
     }

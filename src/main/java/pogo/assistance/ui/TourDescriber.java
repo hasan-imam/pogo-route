@@ -11,18 +11,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import net.dv8tion.jda.core.MessageBuilder.SplitPolicy;
+import pogo.assistance.data.model.Action;
 import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.data.model.Nest;
 import pogo.assistance.data.model.Quest;
 import pogo.assistance.data.model.Reward;
 import pogo.assistance.data.model.Reward.RewardObject;
+import pogo.assistance.data.model.Task;
+import pogo.assistance.data.quest.QuestDictionary;
 import pogo.assistance.route.CooldownCalculator;
 import pogo.assistance.route.planning.conditional.bundle.Bundle;
 import pogo.assistance.route.planning.conditional.bundle.BundlePatternFactory;
+import pogo.assistance.route.planning.conditional.bundle.Tour;
 
 @Getter
 public class TourDescriber {
@@ -47,11 +52,10 @@ public class TourDescriber {
      *      This thing does all the work at construction time for the sake of not duplicating the tour traversal code.
      *      All message generation has the same traversal but different logic deciding what is printed on each line.
      */
-    public TourDescriber(@NonNull final List<? extends Bundle<? extends GeoPoint>> bundles) {
+    public TourDescriber(@NonNull final Tour tour) {
+        final List<? extends Bundle<? extends GeoPoint>> bundles = tour.getBundles();
         Preconditions.checkArgument(!bundles.isEmpty());
-
-        final List<? super GeoPoint> allPoints = new ArrayList<>();
-        final List<Quest> quests = new ArrayList<>();
+        final boolean allPointsHaveSameName = doAllPointsHaveSameName(tour);
         final StringBuilder genericDescriptionBuilder = new StringBuilder();
         final StringBuilder discordPostWithMarkdownBuilder = new StringBuilder("```md" + System.lineSeparator());
         final StringBuilder formattedForMapCustomizerBuilder = new StringBuilder();
@@ -74,22 +78,14 @@ public class TourDescriber {
                     nextPoint = null;
                 }
 
-                final String description;
-                if (currentPoint instanceof Quest) {
-                    description = ((Quest) currentPoint).getAbbreviation()
-                            .orElse(((Quest) currentPoint).getAction().getDescription());
-                    quests.add((Quest) currentPoint);
-                } else {
-                    description = ((Nest) currentPoint).getDescription(); // Nest is the only other expected point type
-                }
-                allPoints.add(currentPoint);
+                final String formattedPointName = allPointsHaveSameName ? "" : String.format("%1$-8s", namePoint(currentPoint));
 
                 final String pointDescription = String.format(
                         "%s,%s, %s %s%s%n",
                         currentPoint.getLatitude(),
                         currentPoint.getLongitude(),
-                        description,
-                        (nextPoint == null) ? "END" : Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint)),
+                        formattedPointName,
+                        (nextPoint == null) ? "END" : RenderingUtils.toString(Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint))),
                         (j + 1) < bundleElements.size() ? "" : String.format(" (set %d)", i + 1));
                 genericDescriptionBuilder.append(pointDescription);
                 discordPostWithMarkdownBuilder.append(pointDescription);
@@ -97,29 +93,30 @@ public class TourDescriber {
                         "%s,%s {%s %s}%s%n",
                         currentPoint.getLatitude(),
                         currentPoint.getLongitude(),
-                        description,
-                        (nextPoint == null) ? "END" : Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint)),
+                        formattedPointName,
+                        (nextPoint == null) ? "END" : RenderingUtils.toString(Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint))),
                         (j + 1) < bundleElements.size() ? "" : String.format(" <green>", i + 1)));
                 formattedForMapMakerappBuilder.append(String.format(
-                        "%s,%s,%s %s%s%n", // lat,long,name cd[,color]
+                        "%s,%s,%s %s%s%n", // lat,long,formattedPointName cd[,color]
                         currentPoint.getLatitude(),
                         currentPoint.getLongitude(),
-                        description,
-                        (nextPoint == null) ? "END" : Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint)),
+                        formattedPointName,
+                        (nextPoint == null) ? "END" : RenderingUtils.toString(Duration.ofSeconds((long) getCooldown(currentPoint, nextPoint))),
                         getColorCodeFor(currentPoint).map(s -> "," + s).orElse("")));
             } // Described a bundle
         } // Described all bundles
         discordPostWithMarkdownBuilder.append("```").append(ZWSP);
 
         this.genericSummary = new StringBuilder()
-                .append(String.format("Total %d quests in %d sets", quests.size(), bundles.size()))
+                .append(String.format("Total %d stops in %d sets", tour.getElements().size(), bundles.size()))
                 .append(System.lineSeparator())
-                .append(describeTotalCooldown((List<? extends GeoPoint>) allPoints))
+                .append(describeTotalCooldown(tour.getElements()))
                 .append(System.lineSeparator())
-                .append(describeActions(quests))
+                .append(describeActions(tour.getQuests()))
                 .append(System.lineSeparator())
-                .append(describeRewards(quests))
+                .append(describeRewards(tour.getQuests()))
                 .append(System.lineSeparator())
+                .append(describeAbbreviations(tour.getElements()))
                 .toString();
         this.genericDescription = genericDescriptionBuilder.toString();
         this.discordPostWithMarkdown = discordPostWithMarkdownBuilder.toString();
@@ -127,16 +124,17 @@ public class TourDescriber {
         this.formattedForMapMakerapp = formattedForMapMakerappBuilder.toString();
     }
 
-    private static String describeActions(final List<Quest> quests) {
-        return quests.stream().collect(Collectors.groupingBy(Quest::getAction)).entrySet().stream()
-                .map(entry -> String.format(
-                        "%d x %s",
-                        entry.getValue().size(),
-                        entry.getKey().getDescription()))
-                .collect(Collectors.joining(", ", "Actions: ", ""));
+    private static String describeActions(final List<? extends Quest> quests) {
+        final List<String> descriptions = quests.stream()
+                .map(Task::getAction)
+                .map(Action::getDescription)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        actions -> RenderingUtils.describeClassification(actions, Function.identity())));
+        return RenderingUtils.toBulletPoints("# Actions", descriptions, 0);
     }
 
-    private static String describeRewards(final List<Quest> quests) {
+    private static String describeRewards(final List<? extends Quest> quests) {
         final Map<RewardObject, List<Reward>> groupedByType = quests.stream()
                 .map(Quest::getReward)
                 .collect(Collectors.groupingBy(Reward::getRewardObject));
@@ -152,7 +150,7 @@ public class TourDescriber {
                         .forEach((isQuantifiable, partitionedRewards) -> {
                             if (isQuantifiable && !partitionedRewards.isEmpty()) {
                                 descriptions.add(String.format(
-                                        "%s %s",
+                                        "%s x %s",
                                         NUMBER_FORMAT.format(partitionedRewards.stream()
                                                 .map(Reward::getQuantity)
                                                 .mapToDouble(Optional::get)
@@ -167,13 +165,46 @@ public class TourDescriber {
                         });
             }
         });
-        return (descriptions.isEmpty()) ? "No reward" : "Rewards: " + String.join(", ", descriptions);
+        return RenderingUtils.toBulletPoints("# Rewards", descriptions, 0);
+    }
+
+    private static String describeAbbreviations(final List<? extends GeoPoint> points) {
+        final List<String> descriptions = points.stream()
+                .filter(point -> point instanceof Task)
+                .map(point -> (Task) point)
+                .map(Task::getAbbreviation)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .distinct()
+                .sorted()
+                .map(abbreviation -> QuestDictionary.lookupByAbbreviation(abbreviation))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(task -> String.format("%s: %s -> %s",
+                        task.getAbbreviation().get(),
+                        task.getAction().getDescription(),
+                        task.getReward().getDescription()))
+                .collect(Collectors.toList());
+        return RenderingUtils.toBulletPoints("# Abbreviations", descriptions, 0);
+    }
+
+    private static boolean doAllPointsHaveSameName(final Tour tour) {
+        return tour.getElements().stream().map(TourDescriber::namePoint).distinct().count() <= 1;
+    }
+
+    private static String namePoint(final GeoPoint geoPoint) {
+        if (geoPoint instanceof Quest) {
+            return ((Quest) geoPoint).getAbbreviation()
+                    .orElse(((Quest) geoPoint).getAction().getDescription());
+        } else {
+            return ((Nest) geoPoint).getDescription(); // Nest is the only other expected point type
+        }
     }
 
     private static String describeTotalCooldown(final List<? extends GeoPoint> points) {
         return String.format(
                 "Total time in cool down: %s",
-                Duration.ofSeconds((long) CooldownCalculator.calculateCost(points, CooldownCalculator::getCooldown)));
+                RenderingUtils.toString(Duration.ofSeconds((long) CooldownCalculator.calculateCost(points, CooldownCalculator::getCooldown))));
     }
 
     private static Optional<String> getColorCodeFor(final GeoPoint point) {

@@ -16,6 +16,7 @@ import pogo.assistance.data.model.Reward;
 import pogo.assistance.data.model.Task;
 import pogo.assistance.data.quest.QuestDictionary;
 import pogo.assistance.route.planning.conditional.bundle.Bundle;
+import pogo.assistance.route.planning.conditional.bundle.Tour;
 import pogo.assistance.ui.TourDescriber;
 
 @UtilityClass
@@ -88,14 +89,14 @@ public class ConsoleOutputUtils {
         System.out.println(availableQuestSummary.toString());
     }
 
-    public static void promptAndOutputPlan(final List<? extends Bundle<? extends GeoPoint>> planned) {
+    public static void promptAndOutputPlan(final Tour tour) {
         final List<String> visualizationOptions = Arrays.asList(
                 "Give the general output",
                 "Print markdown formatted so I can post on Discord",
                 "Format so I can bulk enter on mapcustomizer.com",
                 "Format so I can copy-paste on mapmakerapp.com",
                 "No thanks, I'm done with the results");
-        final TourDescriber tourDescriber = new TourDescriber(planned);
+        final TourDescriber tourDescriber = new TourDescriber(tour);
         boolean isDone = false;
         while (!isDone) {
             final String selected = ConsoleInputUtils.promptAndSelectOne(

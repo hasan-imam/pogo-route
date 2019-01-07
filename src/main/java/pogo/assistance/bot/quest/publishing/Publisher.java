@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Queue;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
+import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Message;
 
 /**
@@ -16,6 +17,13 @@ import net.dv8tion.jda.core.entities.Message;
 @ThreadSafe
 public interface Publisher {
 
+    /**
+     * @param messages
+     *      Messages to be published, in the order returned by queue iteration.
+     * @return
+     *      Messages generated from actually doing the publish operation. So calling {@link Message#getId()} etc. will
+     *      return real message ID, performing {@link Message#addReaction(Emote)} would perform real rest action, etc.
+     */
     List<Message> publish(@Nonnull final Queue<Message> messages);
 
 }

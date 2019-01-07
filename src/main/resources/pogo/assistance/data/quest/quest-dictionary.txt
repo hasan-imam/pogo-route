@@ -36,16 +36,20 @@
     "rewards": ["1500 Stardust"]
   },
   "DT15": {
-    "actions": ["Catch 1 Pokémon (Ditto)"],
+    "actions": ["Catch 1 Pokémon (Ditto)", "Catch a Ditto"],
     "rewards": ["1500 Stardust"]
   },
   "DR15": {
-    "actions": ["Catch 1 Pokémon (Type: Dragon)"],
+    "actions": ["Catch 1 Pokémon (Type: Dragon)", "Catch A Dragon-Type Pokemon"],
     "rewards": ["1500 Stardust"]
   },
   "3R15": {
     "actions": ["Win 3 raids"],
     "rewards": ["1500 Stardust"]
+  },
+  "3GCS10": {
+    "actions": ["Make 3 Great Curveball Throws"],
+    "rewards": ["1000 Stardust"]
   },
   "3B10": {
     "actions": ["Win 3 gym Battles"],
@@ -68,7 +72,7 @@
     "rewards": ["1000 Stardust"]
   },
   "DTC": {
-    "actions": ["Catch 1 Pokémon (Ditto)"],
+    "actions": ["Catch 1 Pokémon (Ditto)", "Catch a Ditto"],
     "rewards": ["3 Rare Candies"]
   },
   "3GC": {
@@ -76,11 +80,11 @@
     "rewards": ["3 Rare Candies"]
   },
   "DRC": {
-    "actions": ["Catch 1 Pokémon (Type: Dragon)"],
+    "actions": ["Catch 1 Pokémon (Type: Dragon)", "Catch A Dragon-Type Pokemon"],
     "rewards": ["3 Rare Candies"]
   },
   "DRT": {
-    "actions": ["Catch 1 Pokémon (Type: Dragon)"],
-    "rewards": ["Pokémon Encounter: Dratini"]
+    "actions": ["Catch 1 Pokémon (Type: Dragon)", "Catch A Dragon-Type Pokemon"],
+    "rewards": ["Pokémon Encounter: Dratini", "Dratini"]
   }
 }

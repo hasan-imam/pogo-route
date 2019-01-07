@@ -123,6 +123,8 @@ public class NineDBDataExtractor {
         try {
             final HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(urlString));
             request.setUnsuccessfulResponseHandler(new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff()));
+            request.setConnectTimeout(60 * 1000);
+            request.setReadTimeout(60 * 1000);
             final HttpHeaders headers = request.getHeaders();
             headers.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36");
             headers.set("referer", "https://9db.jp/pokemongo");

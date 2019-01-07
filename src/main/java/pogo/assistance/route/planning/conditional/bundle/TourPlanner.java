@@ -13,11 +13,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import pogo.assistance.data.model.GeoPoint;
 import pogo.assistance.route.CooldownCalculator;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class TourPlanner {
 
     private final PlannerConfig config;
@@ -28,6 +29,13 @@ public class TourPlanner {
         return points.stream()
                 .parallel()
                 .map(startingPoint -> planTour(startingPoint, points, patterns))
+//                // Uncomment to print out some stats about the generated routes
+//                // Lets you verify that the best/expected route was selected
+//                .peek(tour -> System.out.println(String.format(
+//                        "[route] Duration: %s, Elements: %s, Reward: %s",
+//                        tour.getTotalDuration(),
+//                        tour.getElements().size(),
+//                        tour.getQuantifiedRewards().getOrDefault(RewardObject.STARDUST, -1D))))
                 .max(config.tourComparator());
     }
 
@@ -97,7 +105,7 @@ public class TourPlanner {
      *      points supplied in {@code possibilities}. It doesn't matter if {@code possibilities} contains the
      *      {@code startingPoint} or not. Returns empty if no bundle could be created with this input.
      */
-    private Optional<Bundle<? extends GeoPoint>> createBundle(
+    private Optional<? extends Bundle<? extends GeoPoint>> createBundle(
             final GeoPoint startingPoint,
             final Set<? extends GeoPoint> possibilities,
             final BundlePattern<GeoPoint, String> pattern) {
@@ -123,7 +131,11 @@ public class TourPlanner {
                     .min(Comparator.comparing(value -> config.costFunction().apply(np, value)));
         }
 
-        return Optional.ofNullable(bundleBuilder.isComplete() ? bundleBuilder.build() : null);
+        return Optional.ofNullable(bundleBuilder.isComplete() ? bundleBuilder.build() : null)
+                .filter(bundle -> Double.compare(
+                        bundle.getDistance(),
+                        config.maxBundleDistance().orElse(Double.MAX_VALUE)) <= 0)
+                .filter(bundle -> bundle.getDuration() <= config.maxBundleDuration().map(Duration::getSeconds).orElse(Long.MAX_VALUE));
     }
 
     private Comparator<? super GeoPoint> comparingCostFrom(@Nullable final GeoPoint lastPoint) {

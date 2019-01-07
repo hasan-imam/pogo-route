@@ -50,6 +50,7 @@ public class QuestDictionary {
                     abbrToTask.computeIfAbsent(entry.getKey(), __ -> ImmutableTask.builder()
                             .action(ImmutableAction.builder().description(action.getAsString()).build())
                             .reward(ImmutableReward.builder().description(reward.getAsString()).build())
+                            .abbreviation(Optional.of(entry.getKey()))
                             .build());
                 });
             });

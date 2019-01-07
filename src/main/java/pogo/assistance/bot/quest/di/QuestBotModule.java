@@ -3,10 +3,13 @@ package pogo.assistance.bot.quest.di;
 import dagger.Module;
 import dagger.Provides;
 import dagger.multibindings.ElementsIntoSet;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Named;
 import pogo.assistance.bot.quest.publishing.Publisher;
+import pogo.assistance.bot.quest.publishing.PublisherModule;
 import pogo.assistance.bot.quest.recipe.RareCandyRecipeExecutor;
 import pogo.assistance.bot.quest.recipe.RecipeExecutor;
 import pogo.assistance.bot.quest.recipe.StardustRecipeExecutor;
@@ -26,10 +29,12 @@ public class QuestBotModule {
     public static Set<RecipeExecutor> provideStardustRecipeExecutors(
             final Set<Map> maps,
             final QuestProvider questProvider,
-            final Publisher publisher) {
-        return maps.stream()
-                .map(map -> new StardustRecipeExecutor(map, questProvider, publisher))
-                .collect(Collectors.toSet());
+          @Named(PublisherModule.CONSOLE_PUBLISHER) final Publisher publisher) {
+//        return Collections.emptySet();
+        return Collections.singleton(new StardustRecipeExecutor(Map.NYC, questProvider, publisher));
+//        return maps.stream()
+//                .map(map -> new StardustRecipeExecutor(map, questProvider, publisher))
+//                .collect(Collectors.toSet());
     }
 
     @Provides
@@ -38,9 +43,11 @@ public class QuestBotModule {
             final Set<Map> maps,
             final QuestProvider questProvider,
             final Publisher publisher) {
-        return maps.stream()
-                .map(map -> new RareCandyRecipeExecutor(map, questProvider, publisher))
-                .collect(Collectors.toSet());
+//        return Collections.emptySet();
+        return Collections.singleton(new RareCandyRecipeExecutor(Map.NYC, questProvider, publisher));
+//        return maps.stream()
+//                .map(map -> new RareCandyRecipeExecutor(map, questProvider, publisher))
+//                .collect(Collectors.toSet());
     }
 
 }
