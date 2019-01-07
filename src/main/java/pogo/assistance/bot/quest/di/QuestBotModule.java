@@ -29,7 +29,7 @@ public class QuestBotModule {
     public static Set<RecipeExecutor> provideStardustRecipeExecutors(
             final Set<Map> maps,
             final QuestProvider questProvider,
-          @Named(PublisherModule.CONSOLE_PUBLISHER) final Publisher publisher) {
+          final Publisher publisher) {
 //        return Collections.emptySet();
         return Collections.singleton(new StardustRecipeExecutor(Map.NYC, questProvider, publisher));
 //        return maps.stream()
