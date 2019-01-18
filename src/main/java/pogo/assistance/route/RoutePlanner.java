@@ -28,8 +28,11 @@ class RoutePlanner {
         // Half of these calculations are redundant since cost is same both ways
         // TODO: Optimize
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
+            costs[i][i]=0; // I don't remember if java's default is 0, if it is, this line is unnecessary
+            for (int j = i+1; j < n; j++) {
+                // since there is no loopback, we can ignore [i][i] and since graph is undirected [i][j] is the same as [j][i]
                 costs[i][j] = costFunction.apply(geoPoints.get(i), geoPoints.get(j));
+                costs[j][i] =  costs[i][j];
             }
         }
         return costs;
